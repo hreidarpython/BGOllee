@@ -66,7 +66,7 @@ class XdripReceiver : BroadcastReceiver() {
             intent.getIntExtra("trend_arrow", 0)
         else null
 
-        val bg = glucoseValue.toInt().toString()
+        val bg = glucoseValue.toString()
 
         val trend = when (trendArrow) {
             6, 7 -> "UP2"     // DoubleUp, TripleUp
@@ -97,8 +97,8 @@ class XdripReceiver : BroadcastReceiver() {
         val bgValue = extras.get("com.eveningoutpost.dexdrip.Extras.BgEstimate")
 
         val bg = when (bgValue) {
-            is Double -> bgValue.toInt().toString()
-            is Float  -> bgValue.toInt().toString()
+            is Double -> bgValue.toString()
+            is Float  -> bgValue.toString()
             is Int    -> bgValue.toString()
             else      -> bgValue?.toString()
         } ?: run {
@@ -158,7 +158,7 @@ class XdripReceiver : BroadcastReceiver() {
                 return
             }
 
-            val bg = sgv.toInt().toString()
+            val bg = sgv.toString()
 
             val delta = if (json.has("delta")) {
                 json.getDouble("delta")
