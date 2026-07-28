@@ -157,17 +157,18 @@ class BleService : Service() {
         val valueStr = String.format("%.1f", mmol)
 
         val arrow = when (trend) {
-                "UP2" -> "^"
-                        "UP" -> "+"
+                "UP2" -> "^^"
+                        "UP" -> "^"
                         "FLAT" -> "-"
                         "DOWN" -> "v"
-                        "DOWN2" -> "V"
+                        "DOWN2" -> "vv"
                         else -> "-"
         }
-
-        // 👉 1 arrow char + 5 value chars = 6 total
-        val valueAligned = valueStr.take(5).padStart(5, ' ')
-        return (arrow + valueAligned).take(6)
+    
+                // 👉 arrow (1 or 2 chars) + value chars = 6 total
+                val valueWidth = 6 - arrow.length
+                val valueAligned = valueStr.take(valueWidth).padStart(valueWidth, ' ')
+                return (arrow + valueAligned).take(6)
     }
 
     // ========================
