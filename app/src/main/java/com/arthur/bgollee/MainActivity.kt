@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val (row1, v1) = createRow("🩸", getString(R.string.glycemia))
-        valueGlycemia = v1.apply { textSize = 26f; setTypeface(null, android.graphics.Typeface.BOLD) }
+        valueGlycemia = v1
         tableLayout.addView(row1)
 
         val (row2, v2) = createRow("⌚", getString(R.string.received_at))
@@ -231,7 +231,7 @@ class MainActivity : AppCompatActivity() {
             ""
         }
 
-        val bgDouble = bg?.toDoubleOrNull(); val unit = if (BleService.DISPLAY_MMOL) "mmol/L" else "mg/dL"; val bgDisplay = if (bgDouble != null) { if (BleService.DISPLAY_MMOL) String.format("%.1f", (bgDouble / BleService.MGDL_TO_MMOL).coerceIn(0.0, 99.9)) else bgDouble.toInt().toString() } else (bg ?: "--"); val arrow = when (trend) { "UP2" -> "⬆⬆"; "UP" -> "⬆"; "FLAT" -> "➡"; "DOWN" -> "⬇"; "DOWN2" -> "⬇⬇"; else -> "" }
+        val bgDouble = bg?.toDoubleOrNull(); val unit = if (BleService.DISPLAY_MMOL) "mmol/L" else "mg/dL"; val bgDisplay = if (bgDouble != null) { if (BleService.DISPLAY_MMOL) String.format("%.1f", (bgDouble / BleService.MGDL_TO_MMOL).coerceIn(0.0, 99.9)) else bgDouble.toInt().toString() } else (bg ?: "--"); val arrow = when (trend) { "UP2" -> "^^"; "UP" -> "^"; "FLAT" -> "-"; "DOWN" -> "v"; "DOWN2" -> "vv"; else -> "" }
 
         val glycemiaLabelText = if (deltaStr.isNotEmpty()) {
             "$arrow $bgDisplay $unit  $deltaStr"
