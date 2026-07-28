@@ -307,61 +307,30 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val scanner = adapter.bluetoothLeScanner
+        val allDevices = adapter.bondedDevices
+                val devices = allDevices.filter { it.name?.contains("Ollee", ignoreCase = true) == true }
 
-        if (scanner == null) {
-            Toast.makeText(this, getString(R.string.bluetooth_required), Toast.LENGTH_SHORT).show()
-            return
-        }
+                        if (devices.isEmpty()) {
+                                        Toast.makeText(this, "No 'Ollee' devices found", Toast.LENGTH_SHORT).show()
+                                                    return
+                        }
 
-        val found = LinkedHashMap<String, android.bluetooth.BluetoothDevice>()
+                                val list = devices.map { "${it.name} - ${it.address}" }.toTypedArray()
 
-        val progress = android.app.ProgressDialog(this)
-        progress.setMessage("Scanning for 'Ollee' devices...")
-        progress.setCancelable(true)
-        progress.show()
+                                        AlertDialog.Builder(this)
+                                                    .setTitle(getString(R.string.select_device))
+                                                                .setItems(list) { _, which ->
 
-        val callback = object : android.bluetooth.le.ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
-                val device = result.device
-                val name = device.name ?: result.scanRecord?.deviceName
-                if (name != null && name.contains("Ollee", ignoreCase = true)) {
-                    found[device.address] = device
-                }
-            }
-        }
+                                                                                    val device = devices[which]
 
-        scanner.startScan(callback)
+                                                                                    saveDevice(device.address)
 
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-
-            scanner.stopScan(callback)
-            progress.dismiss()
-
-            if (found.isEmpty()) {
-                Toast.makeText(this, "No 'Ollee' devices found", Toast.LENGTH_SHORT).show()
-                return@postDelayed
-            }
-
-            val devices = found.values.toList()
-            val list = devices.map { "${it.name} - ${it.address}" }.toTypedArray()
-
-            AlertDialog.Builder(this)
-                .setTitle(getString(R.string.select_device))
-                .setItems(list) { _, which ->
-
-                    val device = devices[which]
-
-                    saveDevice(device.address)
-
-                    Toast.makeText(this, device.name, Toast.LENGTH_SHORT).show()
-
-                    startBleService(device.address)
-                    updateUI()
-                }
-                .show()
-
-        }, 8000)
+                                                                                                    Toast.makeText(this, device.name, Toast.LENGTH_SHORT).show()
+                                                                                                    
+                                                                                                                    startBleService(device.address)
+                                                                                                                                    updateUI()
+                                                                }
+                                                                            .show()
     }
 
     private fun saveDevice(address: String) {
