@@ -110,7 +110,7 @@ class BleService : Service() {
 
         prefs.edit()
             .putString("last_bg", bg)
-            .putString("last_sent", formatted)
+            .putString("last_sent", formatted).putString("last_trend", trend ?: "")
             .putFloat("last_delta", delta?.toFloat() ?: Float.NaN)
             .putLong("last_time", now)
             .apply()
