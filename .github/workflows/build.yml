@@ -1,4 +1,6 @@
 name: Build APK
+permissions:
+  contents: write
 
 on:
   push:
@@ -88,3 +90,13 @@ jobs:
       - name: Remove keystore file
         if: always()
         run: rm -f ${{ github.workspace }}/release.keystore
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ steps.git_sha.outputs.sha }}
+          name: Build ${{ steps.git_sha.outputs.sha }}
+          files: |
+            output/bgollee-${{ steps.git_sha.outputs.sha }}-debug.apk
+            output/bgollee-${{ steps.git_sha.outputs.sha }}-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
