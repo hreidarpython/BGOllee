@@ -168,7 +168,7 @@ class BleService : Service() {
                 // 👉 arrow (1 or 2 chars) + value chars = 6 total
                 val valueWidth = 6 - arrow.length
                 val valueAligned = valueStr.take(valueWidth).padStart(valueWidth, ' ')
-                return (arrow + valueAligned).take(6)
+                return (valueAligned + arrow).take(6)
     }
 
     // ========================
