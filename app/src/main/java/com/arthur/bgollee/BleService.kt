@@ -157,10 +157,12 @@ class BleService : Service() {
         val valueStr = String.format("%.1f", mmol)
 
         val arrow = when (trend) {
-            "UP" -> "+"
-            "DOWN" -> "-"
-            "FLAT" -> " "
-            else -> " "
+                "UP2" -> "^"
+                        "UP" -> "+"
+                        "FLAT" -> "-"
+                        "DOWN" -> "v"
+                        "DOWN2" -> "V"
+                        else -> "-"
         }
 
         // 👉 1 arrow char + 5 value chars = 6 total
