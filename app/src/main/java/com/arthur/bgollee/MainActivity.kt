@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
 
         val bg = prefs.getString("last_bg", "--")
         val deltaFloat = prefs.getFloat("last_delta", Float.NaN)
-        val lastSent = prefs.getString("last_sent", "      ") // 6 chars default
+        val lastSent = prefs.getString("last_sent", " "); val trend = prefs.getString("last_trend", null) // 6 chars default
         val time = prefs.getLong("last_time", 0)
 
         val formattedTime =
@@ -226,17 +226,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         val deltaStr = if (!deltaFloat.isNaN()) {
-            String.format("%+.1f", deltaFloat)
+            String.format("%+.1f", if (BleService.DISPLAY_MMOL) deltaFloat / BleService.MGDL_TO_MMOL.toFloat() else deltaFloat)
         } else {
             ""
         }
 
-        val unit = if (bg != null && (bg.contains(".") || bg.contains(","))) "mmol/L" else "mg/dL"
+        val bgDouble = bg?.toDoubleOrNull(); val unit = if (BleService.DISPLAY_MMOL) "mmol/L" else "mg/dL"; val bgDisplay = if (bgDouble != null) { if (BleService.DISPLAY_MMOL) String.format("%.1f", (bgDouble / BleService.MGDL_TO_MMOL).coerceIn(0.0, 99.9)) else bgDouble.toInt().toString() } else (bg ?: "--"); val arrow = when (trend) { "UP2" -> "⇈"; "UP" -> "↑"; "FLAT" -> "→"; "DOWN" -> "↓"; "DOWN2" -> "⇊"; else -> "" }
 
         val glycemiaLabelText = if (deltaStr.isNotEmpty()) {
-            "$bg ($deltaStr) $unit"
+            "$arrow $bgDisplay $unit  $deltaStr"
         } else {
-            "$bg $unit"
+            "$arrow $bgDisplay $unit"
         }
 
         valueGlycemia.text = glycemiaLabelText
@@ -307,30 +307,61 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val allDevices = adapter.bondedDevices
-        val devices = allDevices.filter { it.name?.contains("Ollee", ignoreCase = true) == true }
+        val scanner = adapter.bluetoothLeScanner
 
-        if (devices.isEmpty()) {
-            Toast.makeText(this, "No 'Ollee' devices found", Toast.LENGTH_SHORT).show()
+        if (scanner == null) {
+            Toast.makeText(this, getString(R.string.bluetooth_required), Toast.LENGTH_SHORT).show()
             return
         }
 
-        val list = devices.map { "${it.name} - ${it.address}" }.toTypedArray()
+        val found = LinkedHashMap<String, android.bluetooth.BluetoothDevice>()
 
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.select_device))
-            .setItems(list) { _, which ->
+        val progress = android.app.ProgressDialog(this)
+        progress.setMessage("Scanning for 'Ollee' devices...")
+        progress.setCancelable(true)
+        progress.show()
 
-                val device = devices[which]
-
-                saveDevice(device.address)
-
-                Toast.makeText(this, device.name, Toast.LENGTH_SHORT).show()
-
-                startBleService(device.address)
-                updateUI()
+        val callback = object : android.bluetooth.le.ScanCallback() {
+            override fun onScanResult(callbackType: Int, result: android.bluetooth.le.ScanResult) {
+                val device = result.device
+                val name = device.name ?: result.scanRecord?.deviceName
+                if (name != null && name.contains("Ollee", ignoreCase = true)) {
+                    found[device.address] = device
+                }
             }
-            .show()
+        }
+
+        scanner.startScan(callback)
+
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+
+            scanner.stopScan(callback)
+            progress.dismiss()
+
+            if (found.isEmpty()) {
+                Toast.makeText(this, "No 'Ollee' devices found", Toast.LENGTH_SHORT).show()
+                return@postDelayed
+            }
+
+            val devices = found.values.toList()
+            val list = devices.map { "${it.name} - ${it.address}" }.toTypedArray()
+
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.select_device))
+                .setItems(list) { _, which ->
+
+                    val device = devices[which]
+
+                    saveDevice(device.address)
+
+                    Toast.makeText(this, device.name, Toast.LENGTH_SHORT).show()
+
+                    startBleService(device.address)
+                    updateUI()
+                }
+                .show()
+
+        }, 8000)
     }
 
     private fun saveDevice(address: String) {
