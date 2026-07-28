@@ -27,7 +27,7 @@ class BleService : Service() {
 
     companion object {
         const val CHANNEL_ID = "ble_service_channel"
-        private const val TIMEOUT_MS = 15 * 60 * 1000L
+        private const val TIMEOUT_MS = 15 * 60 * 1000L; const val DISPLAY_MMOL = true; const val MGDL_TO_MMOL = 18.0182
 
         val SERVICE_UUID =
             UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e")
@@ -126,14 +126,14 @@ class BleService : Service() {
 
         val clean = bg.replace(",", ".")
 
-        val isMmol = clean.contains(".")
+        val mgdlValue = clean.toDoubleOrNull() ?: return "Err   "
 
         // ========================
         // mg/dL: 3 chars glucose + 3 chars delta (left-padded), no trend arrow
         // ========================
-        if (!isMmol) {
-            val mgdl = clean.replace("[^0-9]".toRegex(), "")
-                .toIntOrNull() ?: return "Err   "
+        if (!DISPLAY_MMOL) {
+            val mgdl = mgdlValue.toInt()
+                // (parsed above)
             val clampedMgdl = mgdl.coerceIn(0, 999)
 
             // Left-pad glucose into exactly 3 chars (values ≥1000 are already clamped to 999)
@@ -153,8 +153,8 @@ class BleService : Service() {
         // ========================
         // mmol/L: legacy 6-char format (1 trend arrow + 5 value chars)
         // ========================
-        val mmol = clean.toFloatOrNull() ?: return "Err   "
-        val valueStr = String.format("%.1f", mmol.coerceIn(0f, 99.9f))
+        val mmol = (mgdlValue / MGDL_TO_MMOL).coerceIn(0.0, 99.9)
+        val valueStr = String.format("%.1f", mmol)
 
         val arrow = when (trend) {
             "UP" -> "+"
