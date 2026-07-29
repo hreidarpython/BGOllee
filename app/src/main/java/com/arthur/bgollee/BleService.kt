@@ -157,18 +157,21 @@ class BleService : Service() {
         val valueStr = String.format("%.1f", mmol)
 
         val arrow = when (trend) {
-                "UP2" -> "^^"
-                        "UP" -> "^"
-                        "FLAT" -> "-"
-                        "DOWN" -> "v"
-                        "DOWN2" -> "vv"
-                        else -> "-"
+                            "UP2" -> "^^"
+                            "UP" -> "^-"
+                            "FLAT" -> "--"
+                            "DOWN" -> "v-"
+                            "DOWN2" -> "vv"
+                            else -> "--"
         }
-    
-                // 👉 arrow (1 or 2 chars) + value chars = 6 total
-                val valueWidth = 6 - arrow.length
-                val valueAligned = valueStr.take(valueWidth).padStart(valueWidth, ' ')
-                return (valueAligned + arrow).take(6)
+
+                    // 👉 watch has a fixed hardware colon that doubles as the decimal
+                                // point, so we never send ".": 2 chars int part + 1 decimal digit
+                                            // + 1 blank spacer + 2 char arrow = 6 total
+                                                        val valueParts = valueStr.split(".")
+                                                                    val intPart = valueParts[0].padStart(2, ' ').take(2)
+                                                                                val decPart = valueParts.getOrElse(1) { "0" }.take(1)
+                                                                                            return (intPart + decPart + " " + arrow).take(6)
     }
 
     // ========================
